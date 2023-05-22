@@ -1,15 +1,21 @@
 package com.spring.practice.Controller;
 
 import com.spring.practice.dto.AuthRequest;
+import com.spring.practice.dto.AuthResponse;
 import com.spring.practice.entites.User;
 import com.spring.practice.entites.UserInfo;
+import com.spring.practice.entites.UserInfoUserDetails;
+import com.spring.practice.service.UserInfoUserDetailsService;
 import com.spring.practice.serviceImpl.JwtServiceImpl;
 import com.spring.practice.serviceImpl.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +31,11 @@ public class UserController {
     private JwtServiceImpl jwtServiceImpl;
     @Autowired
     private AuthenticationManager authenticationManager;
+    @Autowired
+    private UserInfoUserDetails userInfoUserDetails;
+    @Autowired
+
+    private UserInfoUserDetailsService userInfoUserDetailsService;
     @GetMapping("/getAll")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public List<User> getAllUsers()
@@ -32,7 +43,7 @@ public class UserController {
         return this.userService.getAllUsers();
     }
     @GetMapping("/get/{username}")
-    @PreAuthorize("hasAuthority('ROLE_USER')")
+    //@PreAuthorize("hasAuthority('ROLE_USER')")
     public User getUser(@PathVariable("username") String username)
     {
         return this.userService.getUser(username);
@@ -53,12 +64,20 @@ public class UserController {
         return userService.addUser(userInfo);
     }
 @PostMapping("/authenticate")
-    public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<AuthResponse> authenticateAndGetToken(@RequestBody AuthRequest authRequest) throws UsernameNotFoundException {
     Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
     if (authentication.isAuthenticated()) {
-        return jwtServiceImpl.generateToken(authRequest.getUsername());
+        //UserDetails userDetails = this.userInfoUserDetailsService.loadUserByUsername(authRequest.getUsername());
+        String token=this.jwtServiceImpl.generateToken(authRequest.getUsername());
+        AuthResponse authResponse=new AuthResponse();
+        authResponse.setUsername(this.jwtServiceImpl.getUserNameFromToken(token));
+        authResponse.setToken(token);
+        authResponse.setTokenExpirationTime(this.jwtServiceImpl.getExpirationDateFromToken(token).toString());
+        authResponse.setMessage("success");
+        return new ResponseEntity<AuthResponse>(authResponse, HttpStatus.OK);
     } else {
         throw new UsernameNotFoundException("invalid user request!");
+
     }
 
 }

@@ -38,11 +38,6 @@ public class JwtServiceImpl implements JwtService {
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
     }
-
-
-
-
-
     @Override
     public String generateToken(String userName) {
         Map<String,Object> claims=new HashMap<>();
