@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
-public class JwtServiceImpl implements JwtService {
+public class JwtServiceImpl {
     public static final String SECRET="556A586E3272357538782F413F4428472B4B6250655368566D59703373367639";
 
     public String getUserNameFromToken(String token) {
@@ -38,7 +38,7 @@ public class JwtServiceImpl implements JwtService {
     public Date getExpirationDateFromToken(String token) {
         return getClaimFromToken(token, Claims::getExpiration);
     }
-    @Override
+
     public String generateToken(String userName) {
         Map<String,Object> claims=new HashMap<>();
         return createToken(claims,userName);

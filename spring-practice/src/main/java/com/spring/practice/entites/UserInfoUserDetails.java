@@ -14,7 +14,7 @@ public class UserInfoUserDetails implements UserDetails {
 
     private String name;
     private String password;
-    private List<GrantedAuthority> authorites;
+    private final List<GrantedAuthority> authorites;
     
 
     public UserInfoUserDetails(UserInfo userInfo) {

@@ -5,9 +5,11 @@ import com.spring.practice.dto.AuthResponse;
 import com.spring.practice.entites.User;
 import com.spring.practice.entites.UserInfo;
 import com.spring.practice.entites.UserInfoUserDetails;
+import com.spring.practice.mail.MailServiceImpl;
 import com.spring.practice.service.UserInfoUserDetailsService;
 import com.spring.practice.serviceImpl.JwtServiceImpl;
 import com.spring.practice.serviceImpl.UserServiceImpl;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +24,9 @@ import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,17 +92,21 @@ public class UserController {
 //
 //}
     @PostMapping("/authenticate")
-    public ResponseEntity<Map<String,Object>> login(@RequestBody AuthRequest authRequest) throws Exception {
-        this.authenticate(authRequest.getUsername(),authRequest.getPassword());
-        UserDetails userDetails=this.userInfoUserDetailsService.loadUserByUsername(authRequest.getUsername());
-        String token=this.jwtServiceImpl.generateToken(String.valueOf(userDetails));
-        Map<String,Object> map=new HashMap<>();
-        map.put("token",token);
-        map.put("tokenExpTime",this.jwtServiceImpl.getExpirationDateFromToken(token).toString());
-        map.put("message","success");
-        map.put("userName",userDetails.getUsername());
-        map.put("userRole",userDetails.getAuthorities());
-        return new ResponseEntity<Map<String,Object>>(map,HttpStatus.OK);
+    public ResponseEntity<Map<String, Object>> login(@RequestBody AuthRequest authRequest) throws Exception {
+        this.authenticate(authRequest.getUsername(), authRequest.getPassword());
+        UserDetails userDetails = this.userInfoUserDetailsService.loadUserByUsername(authRequest.getUsername());
+        String token = this.jwtServiceImpl.generateToken(userDetails.getUsername());
+        Map<String, Object> map = new HashMap<>();
+        map.put("token", token);
+        map.put("token expiration time", this.jwtServiceImpl.getExpirationDateFromToken(token).toString());
+        map.put("token expiration time in milli seconds", this.jwtServiceImpl.getExpirationDateFromToken(token).getTime());
+        map.put("message", "success");
+        map.put("status", "success");
+        map.put("username", userDetails.getUsername());
+        map.put("user-role", userDetails.getAuthorities().stream().map(auth -> auth.getAuthority()));
+
+        return ResponseEntity.ok().body(map);
+
     }
 
     private void authenticate(String username,String password) throws Exception {
@@ -115,4 +123,6 @@ public class UserController {
             throw new BadCredentialsException("bad credentials");
         }
     }
+
+
 }

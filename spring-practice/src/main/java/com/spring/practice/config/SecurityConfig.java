@@ -27,6 +27,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
+
+    @Autowired
+    private UserInfoUserDetailsService userInfoUserDetailsService;
     //authentication
     @Bean
     public UserDetailsService userDetailsService()
@@ -50,7 +53,7 @@ return httpSecurity.csrf().disable()
         .authorizeHttpRequests()
         .requestMatchers("/users/welcome","users/new","users/authenticate").permitAll()
         .and()
-        .authorizeHttpRequests().requestMatchers("/users/**").authenticated()
+        .authorizeHttpRequests().requestMatchers("users/**","/api/v1/mail/**","/api/v1/otp/**").authenticated()
         .and().sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
@@ -68,7 +71,7 @@ return httpSecurity.csrf().disable()
     public AuthenticationProvider authenticationProvider()
     {
         DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService());
+        authenticationProvider.setUserDetailsService(userInfoUserDetailsService);
         authenticationProvider.setPasswordEncoder(passwordEncoder());
         return authenticationProvider;
     }
